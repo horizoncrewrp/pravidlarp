@@ -415,10 +415,9 @@
 </div>
 
 <script>
-  const GIST_ID    = '9e858fc3df9e6ca6d97a3485afaa5353';
-  const GH_TOKEN   = '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';
-  const GIST_FILE  = 'data.json';
-  const API_BASE   = 'https://api.github.com/gists/' + GIST_ID;
+  const SB_URL     = 'https://vlwxeceaporkgqbpihau.supabase.co';
+  const SB_KEY     = 'sb_publishable_i_m2ejV_TI7dJOSbUsEEXg_RMrBcQkm';
+  const API_BASE   = SB_URL + '/rest/v1/rules';
 
   let isAdmin = false, loginPanelOpen = false, currentData = {}, activeSectionId = null;
   let dragSrcId = null;
@@ -442,10 +441,11 @@
   // ===== JSONBIN =====
   async function loadData() {
     try {
-      const res  = await fetch(API_BASE, { headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' } });
+      const res  = await fetch(API_BASE + '?id=eq.1&select=data', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
       const json = await res.json();
-      const raw  = json.files[GIST_FILE].content;
-      currentData = JSON.parse(raw);
+      currentData = JSON.parse(json[0].data);
       if (!currentData.sections || !currentData.sections.length) currentData.sections = DEFAULT_SECTIONS;
       if (!currentData.password) currentData.password = 'admin123';
       if (!currentData.history) currentData.history = [];
@@ -470,10 +470,10 @@
     if (currentData.history.length > 10) currentData.history = currentData.history.slice(0,10);
 
     try {
-      await fetch(API_BASE, {
+      await fetch(API_BASE + '?id=eq.1', {
         method:'PATCH',
-        headers:{'Authorization':'token ' + GH_TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
-        body:JSON.stringify({ files:{ [GIST_FILE]:{ content: JSON.stringify(currentData) } } })
+        headers:{ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ data: JSON.stringify(currentData) })
       });
       document.getElementById('updated-display').textContent = 'Aktualizováno dne ' + ts;
       si.textContent = '● Uloženo ✓'; si.classList.add('ok');
