@@ -415,9 +415,10 @@
 </div>
 
 <script>
-  const BIN_ID     = 'TVOJE_BIN_ID';
-  const MASTER_KEY = 'TVUJ_MASTER_KEY';
-  const API_BASE   = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+  const GIST_ID    = '9e858fc3df9e6ca6d97a3485afaa5353';
+  const GH_TOKEN   = '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';
+  const GIST_FILE  = 'data.json';
+  const API_BASE   = 'https://api.github.com/gists/' + GIST_ID;
 
   let isAdmin = false, loginPanelOpen = false, currentData = {}, activeSectionId = null;
   let dragSrcId = null;
@@ -441,9 +442,10 @@
   // ===== JSONBIN =====
   async function loadData() {
     try {
-      const res  = await fetch(API_BASE + '/latest', { headers: { 'X-Master-Key': MASTER_KEY } });
+      const res  = await fetch(API_BASE, { headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' } });
       const json = await res.json();
-      currentData = json.record;
+      const raw  = json.files[GIST_FILE].content;
+      currentData = JSON.parse(raw);
       if (!currentData.sections || !currentData.sections.length) currentData.sections = DEFAULT_SECTIONS;
       if (!currentData.password) currentData.password = 'admin123';
       if (!currentData.history) currentData.history = [];
@@ -469,9 +471,9 @@
 
     try {
       await fetch(API_BASE, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},
-        body:JSON.stringify(currentData)
+        method:'PATCH',
+        headers:{'Authorization':'token ' + GH_TOKEN,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+        body:JSON.stringify({ files:{ [GIST_FILE]:{ content: JSON.stringify(currentData) } } })
       });
       document.getElementById('updated-display').textContent = 'Aktualizováno dne ' + ts;
       si.textContent = '● Uloženo ✓'; si.classList.add('ok');
